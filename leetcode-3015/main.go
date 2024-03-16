@@ -4,7 +4,7 @@ import (
 	"fmt"
 )
 
-// O(n^3) - Floyd Warhall
+// O(n^3) - Floyd Warshall
 func countOfPairs(n int, x int, y int) []int {
 	matrix := make([][]int, n)
 	for i := range matrix {
