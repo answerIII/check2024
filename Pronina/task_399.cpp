@@ -114,7 +114,7 @@ private:
 
 };
 
-
+ 
 int main() {
     Solution solution;
     vector<vector<string>> equations = { {"a", "b"} };
