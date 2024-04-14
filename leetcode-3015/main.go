@@ -4,46 +4,48 @@ import (
 	"fmt"
 )
 
-// O(n^3) - Floyd Warshall
+const inf = 10e6
+
+// O(n^2) - n * BFS
 func countOfPairs(n int, x int, y int) []int {
-	matrix := make([][]int, n)
-	for i := range matrix {
-		matrix[i] = make([]int, n)
-	}
-
-	for i := 0; i < n-1; i++ {
-		matrix[i][i+1] = 1
-		matrix[i+1][i] = 1
-	}
-
-	if x != y {
-		matrix[x-1][y-1] = 1
-		matrix[y-1][x-1] = 1
-	}
-
-	for k := 0; k < n; k++ {
-		for i := 0; i < n; i++ {
-			for j := 0; j < n; j++ {
-				if i == j {
-					continue
-				}
-
-				if matrix[i][j] != 0 && matrix[i][k] != 0 && matrix[k][j] != 0 {
-					matrix[i][j] = min(matrix[i][j], matrix[i][k]+matrix[k][j])
-				} else if matrix[i][j] == 0 && matrix[i][k] != 0 && matrix[k][j] != 0 {
-					matrix[i][j] = matrix[i][k] + matrix[k][j]
-				}
-			}
-		}
-	}
-
 	result := make([]int, n)
-	for i := 0; i < n; i++ {
-		for j := 0; j < n; j++ {
-			if matrix[i][j] > 0 {
-				result[matrix[i][j]-1]++
+
+	housesAdj := make([][]int, n)
+	for i := 0; i < n-1; i++ {
+		housesAdj[i] = append(housesAdj[i], i+1)
+		housesAdj[i+1] = append(housesAdj[i+1], i)
+	}
+
+	housesAdj[x-1] = append(housesAdj[x-1], y-1)
+	housesAdj[y-1] = append(housesAdj[y-1], x-1)
+
+	var bfs func(house int) = func(house int) {
+		distance := make([]int, n)
+		for i := range distance {
+			if i != house {
+				distance[i] = inf
 			}
 		}
+
+		queue := []int{house}
+		for len(queue) > 0 {
+			elem := queue[0]
+			queue = queue[1:]
+
+			neighbors := housesAdj[elem]
+
+			for _, neighbor := range neighbors {
+				if distance[elem]+1 < distance[neighbor] {
+					result[distance[elem]]++
+					distance[neighbor] = distance[elem] + 1
+					queue = append(queue, neighbor)
+				}
+			}
+		}
+	}
+
+	for i := 0; i < n; i++ {
+		bfs(i)
 	}
 
 	return result
