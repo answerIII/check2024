@@ -2,49 +2,41 @@ package main
 
 import "fmt"
 
-func insertInMap(m map[int][]int, ind int, elem int) {
-	arr := m[ind]
-	arr = append(arr, elem)
-	m[ind] = arr
-}
-
-func dfs(adjEdges map[int][]int, node int) int {
-	if _, ok := adjEdges[node]; !ok {
-		return 1
-	}
-
-	neighbors := adjEdges[node]
-	delete(adjEdges, node)
-
-	var count int
-	for _, neighbor := range neighbors {
-		if _, ok := adjEdges[neighbor]; ok {
-			count += dfs(adjEdges, neighbor) + 1
-		}
-	}
-
-	return count
-}
-
 // O(n)
 func countPairs(n int, edges [][]int) int64 {
-	adjEdges := make(map[int][]int, n)
+	adjEdges := make([][]int, n)
 	found := make(map[int]struct{}, n)
 
 	for _, edge := range edges {
-		insertInMap(adjEdges, edge[0], edge[1])
-		insertInMap(adjEdges, edge[1], edge[0])
+		adjEdges[edge[0]] = append(adjEdges[edge[0]], edge[1])
+		adjEdges[edge[1]] = append(adjEdges[edge[1]], edge[0])
+
 		found[edge[0]] = struct{}{}
 		found[edge[1]] = struct{}{}
 	}
 
-	componentsSize := make([]int, 0)
-	for node := range adjEdges {
-		componentsSize = append(componentsSize, dfs(adjEdges, node)+1)
+	seen := make(map[int]struct{})
+
+	var dfs func(int) int
+	dfs = func(node int) int {
+		neighbors := adjEdges[node]
+		seen[node] = struct{}{}
+
+		var count int = 1
+		for _, neighbor := range neighbors {
+			if _, ok := seen[neighbor]; !ok {
+				count += dfs(neighbor)
+			}
+		}
+
+		return count
 	}
 
-	for i := 0; i < n-len(found); i++ {
-		componentsSize = append(componentsSize, 1)
+	componentsSize := make([]int, 0, n)
+	for node := range adjEdges {
+		if _, ok := seen[node]; !ok {
+			componentsSize = append(componentsSize, dfs(node))
+		}
 	}
 
 	var numPairs int64
