@@ -4,34 +4,25 @@ import "fmt"
 
 // O(n)
 func findChampion(n int, edges [][]int) int {
-	winners := make(map[int]struct{}, n)
-	losers := make(map[int]struct{}, n)
-	foundTeams := make(map[int]struct{}, n)
-
+	losers := make([]int, n)
 	for _, edge := range edges {
-		winner := edge[0]
-		loser := edge[1]
-
-		if _, ok := losers[winner]; !ok {
-			winners[winner] = struct{}{}
-		}
-
-		losers[loser] = struct{}{}
-		delete(winners, loser)
-		foundTeams[loser] = struct{}{}
-		foundTeams[winner] = struct{}{}
+		losers[edge[1]]++
 	}
 
-	if len(winners)+(n-len(foundTeams)) != 1 {
+	champs := 0
+	champ := losers[0]
+	for i, loserCount := range losers {
+		if loserCount == 0 {
+			champs++
+			champ = i
+		}
+	}
+
+	if champs > 1 {
 		return -1
 	}
 
-	var result int
-	for winner := range winners {
-		result = winner
-	}
-
-	return result
+	return champ
 }
 
 func main() {
