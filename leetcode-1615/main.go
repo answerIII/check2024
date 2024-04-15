@@ -2,63 +2,57 @@ package main
 
 import "fmt"
 
-func insertInMap(m map[int]map[int]struct{}, ind int, elem int) {
-	set := m[ind]
-	if set == nil {
-		set = make(map[int]struct{})
-	}
-	set[elem] = struct{}{}
-	m[ind] = set
-}
-
-func getMaxAdj(m map[int]map[int]struct{}) (maxNode int, max int) {
-	for node, neighbors := range m {
-		if max < len(neighbors) {
-			max = len(neighbors)
-			maxNode = node
-		}
+func maxInt(a, b int) int {
+	if a > b {
+		return a
 	}
 
-	return
+	return b
 }
 
 func maximalNetworkRank(n int, roads [][]int) int {
-	if len(roads) < 2 {
-		return len(roads)
-	}
+	roadsSet := make(map[int]map[int]struct{})
+	networkDegree := make([]int, n)
 
-	adjEdges := make(map[int]map[int]struct{}, n)
 	for _, road := range roads {
-		insertInMap(adjEdges, road[0], road[1])
-		insertInMap(adjEdges, road[1], road[0])
-	}
+		a := road[0]
+		b := road[1]
+		networkDegree[a]++
+		networkDegree[b]++
 
-	firstMaxNode, firstMax := getMaxAdj(adjEdges)
-	delete(adjEdges, firstMaxNode)
+		if roadsSet[a] == nil {
+			roadsSet[a] = make(map[int]struct{})
+		}
+		roadsSet[a][b] = struct{}{}
 
-	var res, prevSecondMax int
-	for len(adjEdges) != 0 {
-		secondMaxNode, secondMax := getMaxAdj(adjEdges)
-		if secondMax < prevSecondMax {
-			break
+		if roadsSet[b] == nil {
+			roadsSet[b] = make(map[int]struct{})
 		}
 
-		secondNeighbors := adjEdges[secondMaxNode]
-		if _, ok := secondNeighbors[firstMaxNode]; ok {
-			res = max(res, firstMax+secondMax-1)
-		} else {
-			res = max(res, firstMax+secondMax)
-		}
-
-		delete(adjEdges, secondMaxNode)
-		prevSecondMax = secondMax
+		roadsSet[b][a] = struct{}{}
 	}
 
-	return res
+	maxNetworkRank := 0
+	for i := 0; i < n; i++ {
+		for j := i+1; j < n; j++ {
+			rank := networkDegree[i]+networkDegree[j]
+
+			_, ok1 := roadsSet[i][j]
+			_, ok2 := roadsSet[j][i]
+
+			if ok1 || ok2 {
+				rank--
+			}
+
+			maxNetworkRank = maxInt(maxNetworkRank, rank)
+		}
+	}
+
+	return maxNetworkRank
 }
 
 func main() {
-	fmt.Println("test1: ", maximalNetworkRank(3, [][]int{{0, 1}, {0, 3}, {1, 2}, {1, 3}}))
+	fmt.Println("test1: ", maximalNetworkRank(4, [][]int{{0, 1}, {0, 3}, {1, 2}, {1, 3}}))
 	fmt.Println("test2: ", maximalNetworkRank(5, [][]int{{0, 1}, {0, 3}, {1, 2}, {1, 3}, {2, 3}, {2, 4}}))
-	fmt.Println("test1: ", maximalNetworkRank(8, [][]int{{0, 1}, {1, 2}, {2, 3}, {2, 4}, {5, 6}, {5, 7}}))
+	fmt.Println("test3: ", maximalNetworkRank(8, [][]int{{0, 1}, {1, 2}, {2, 3}, {2, 4}, {5, 6}, {5, 7}}))
 }
